@@ -24,6 +24,6 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Could not connect to MongoDB", err));
 
-app.listen(3000, () => {
-  console.log("BoiteAnnonces listening on port 3000!");
+app.listen(process.env.PORT || 3001, () => {
+  console.log(`BoiteAnnonces listening on port ${process.env.PORT || 3001}`);
 });
