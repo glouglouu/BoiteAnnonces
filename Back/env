@@ -1,0 +1,23 @@
+# Configuration MongoDB
+DB_URI=mongodb+srv://mowgli:gdkbdD@api.vizpz.mongodb.net/
+
+# Clé secrète pour les JWT
+JWT_SECRET=VotreSuperSecretJWT
+
+# Clé secrète pour les sessions (utilisée avec Passport)
+SESSION_SECRET=VotreSuperSecretSession
+
+# Configuration OAuth2 - Google
+GOOGLE_CLIENT_ID=Votre_Client_ID_Google
+GOOGLE_CLIENT_SECRET=Votre_Client_Secret_Google
+
+# Configuration OAuth2 - GitHub
+GITHUB_CLIENT_ID=Votre_Client_ID_GitHub
+GITHUB_CLIENT_SECRET=Votre_Client_Secret_GitHub
+
+# Configuration OAuth2 - Twitter
+TWITTER_CONSUMER_KEY=Votre_Consumer_Key_Twitter
+TWITTER_CONSUMER_SECRET=Votre_Consumer_Secret_Twitter
+
+# Port de l'application
+PORT=5000
