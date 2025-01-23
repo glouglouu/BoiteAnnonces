@@ -1,98 +1,78 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Login() {
-  type User = {
-    name: string;
-    surname: string;
-    email: string;
-    password: string;
-  };
-
-  const [user, setUser] = useState<User>({
-    name: "",
-    surname: "",
-    email: "",
-    password: "",
+const Login = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
   });
-  const handleSubmit = () => {
-    console.log("Form submitted");
-    console.log(user);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setUser({
-      ...user,
-      [name]: value,
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // S'assurer que les données sont envoyées correctement
+    const dataToSend = {
+      email: formData.email,
+      password: formData.password,
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // S'assurer que le type de contenu est "application/json"
+        },
+        body: JSON.stringify(dataToSend), // Envoyer les données sous forme de JSON
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la connexion');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token); // Sauvegarder le token dans localStorage
+      navigate('/'); // Rediriger vers la page principale après la connexion réussie
+    } catch (err) {
+      setError(err.message); // Afficher l'erreur en cas de problème
+    }
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <h1 className="text-3xl font-bold tracking-wide">Login</h1>
-      <form
-        onChange={(e) => handleChange(e)}
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="w-full max-w-md mt-4 p-6 bg-gray-100 rounded-lg shadow-lg"
-      >
-        <div className="flex flex-col mb-4">
-          <label htmlFor="name" className="text-lg font-bold mb-2">
-            Name
-          </label>
+    <div className="login">
+      <h2>Connexion</h2>
+      {error && <p className="error-message">{error}</p>} {/* Afficher l'erreur */}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Email :</label>
           <input
-            name="name"
-            id="name"
-            type="text"
-            className="border-2 border-gray-300 rounded-lg p-2 w-full"
-            required
-          />
-        </div>
-        <div className="flex flex-col mb-4">
-          <label htmlFor="surname" className="text-lg font-bold mb-2">
-            Surname
-          </label>
-          <input
-            name="surname"
-            id="surname"
-            type="text"
-            className="border-2 border-gray-300 rounded-lg p-2 w-full"
-            required
-          />
-        </div>
-        <div className="flex flex-col mb-4">
-          <label htmlFor="email" className="text-lg font-bold mb-2">
-            Email
-          </label>
-          <input
+            type="email"
             name="email"
-            id="email"
-            type="text"
-            className="border-2 border-gray-300 rounded-lg p-2 w-full"
+            value={formData.email}
+            onChange={handleChange}
             required
           />
         </div>
-        <div className="flex flex-col mb-4">
-          <label htmlFor="password" className="text-lg font-bold mb-2">
-            Password
-          </label>
+        <div className="form-group">
+          <label>Mot de passe :</label>
           <input
-            name="password"
-            id="password"
             type="password"
-            className="border-2 border-gray-300 rounded-lg p-2 w-full"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
             required
           />
         </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
-        >
-          Submit
-        </button>
+        <button type="submit">Se connecter</button>
       </form>
     </div>
   );
-}
+};
+
+export default Login;
