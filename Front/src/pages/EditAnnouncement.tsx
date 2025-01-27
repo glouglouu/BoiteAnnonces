@@ -1,17 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-const EditAnnouncement = () => {
-  const { id } = useParams(); // Récupère l'ID de l'annonce depuis l'URL
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+interface Announcement {
+  title: string;
+  description: string;
+  image: File | null;
+}
+
+const EditAnnouncement: React.FC = () => {
+  const { id } = useParams<{ id: string }>(); // Typage explicite de l'ID depuis les paramètres d'URL
+  const [formData, setFormData] = useState<Announcement>({
+    title: "",
+    description: "",
     image: null,
   });
-
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [currentImage, setCurrentImage] = useState('');
+  const [error, setError] = useState<string | null>(null); // Typage explicite des erreurs
+  const [success, setSuccess] = useState<boolean>(false);
+  const [currentImage, setCurrentImage] = useState<string>("");
 
   const navigate = useNavigate();
 
@@ -20,7 +25,7 @@ const EditAnnouncement = () => {
       try {
         const response = await fetch(`/api/annonces/${id}`);
         if (!response.ok) {
-          throw new Error('Annonce introuvable.');
+          throw new Error("Annonce introuvable.");
         }
         const data = await response.json();
         setFormData({
@@ -30,42 +35,48 @@ const EditAnnouncement = () => {
         });
         setCurrentImage(data.image); // Conserver l'ancienne image si présente
       } catch (err) {
-        setError(err.message);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Une erreur inconnue s'est produite.");
+        }
       }
     };
 
-    fetchAnnouncement();
+    if (id) {
+      fetchAnnouncement();
+    }
   }, [id]);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'image') {
-      setFormData({ ...formData, [name]: files[0] });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, files } = e.target as HTMLInputElement;
+    if (name === "image" && files && files.length > 0) {
+      setFormData({ ...formData, image: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const updatedFormData = new FormData();
-    updatedFormData.append('title', formData.title);
-    updatedFormData.append('description', formData.description);
-    if (formData.image) updatedFormData.append('image', formData.image);
+    updatedFormData.append("title", formData.title);
+    updatedFormData.append("description", formData.description);
+    if (formData.image) updatedFormData.append("image", formData.image);
 
     try {
       const response = await fetch(`/api/annonces/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: updatedFormData,
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Erreur lors de la mise à jour de l\'annonce');
+        throw new Error(data.error || "Erreur lors de la mise à jour de l'annonce");
       }
 
       setSuccess(true);
@@ -73,10 +84,14 @@ const EditAnnouncement = () => {
 
       // Rediriger vers la page principale après 2 secondes
       setTimeout(() => {
-        navigate('/');
+        navigate("/");
       }, 2000);
     } catch (err) {
-      setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Une erreur inconnue s'est produite.");
+      }
       setSuccess(false);
     }
   };
@@ -84,7 +99,9 @@ const EditAnnouncement = () => {
   return (
     <div className="edit-announcement-page">
       <h2>Modifier l'annonce</h2>
-      {success && <p className="success-message">Annonce mise à jour avec succès ! Redirection...</p>}
+      {success && (
+        <p className="success-message">Annonce mise à jour avec succès ! Redirection...</p>
+      )}
       {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
@@ -120,7 +137,11 @@ const EditAnnouncement = () => {
         </div>
         {currentImage && !formData.image && (
           <div>
-            <img src={`/uploads/${currentImage}`} alt="Image de l'annonce actuelle" className="current-image" />
+            <img
+              src={`/uploads/${currentImage}`}
+              alt="Image de l'annonce actuelle"
+              className="current-image"
+            />
             <p>Image actuelle</p>
           </div>
         )}

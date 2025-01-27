@@ -1,18 +1,24 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Login: React.FC = () => {
-  const [formData, setFormData] = useState<{ email: string; password: string }>(
-    {
-      email: "",
-      password: "",
-    }
-  );
+const Register: React.FC = () => {
+  const [formData, setFormData] = useState<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+  }>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Gestion des changements dans les champs
+  // Gestion des changements dans les champs du formulaire
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -22,30 +28,33 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { email, password } = formData;
+    const { firstName, lastName, email, password } = formData;
 
-    if (!email || !password) {
+    // Vérification des champs obligatoires
+    if (!firstName || !lastName || !email || !password) {
       setError("Tous les champs sont requis");
       return;
     }
 
+    const dataToSend = { firstName, lastName, email, password };
+
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch("http://localhost:5000/api/users/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de la connexion");
+        throw new Error(errorData.error || "Erreur lors de l'inscription");
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.token); // Sauvegarde du token
-      setSuccessMessage("Connexion réussie !");
+      localStorage.setItem("token", data.token); // Sauvegarder le token
+      setSuccessMessage("Inscription réussie !");
       setError(null);
 
       // Redirection vers Home après 2 secondes
@@ -62,15 +71,43 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-        Connexion
-      </h2>
+    <div className="max-w-lg mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Inscription</h2>
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
       {successMessage && (
         <p className="text-green-500 text-center mb-4">{successMessage}</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="firstName" className="block text-gray-700 font-medium mb-1">
+            Prénom :
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="w-full border rounded-md p-2"
+            placeholder="Votre prénom"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="lastName" className="block text-gray-700 font-medium mb-1">
+            Nom :
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="w-full border rounded-md p-2"
+            placeholder="Votre nom"
+            required
+          />
+        </div>
         <div>
           <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
             Email :
@@ -105,7 +142,7 @@ const Login: React.FC = () => {
           type="submit"
           className="w-full bg-blue-500 text-white font-medium py-2 rounded-md hover:bg-blue-600"
         >
-          Se connecter
+          S'inscrire
         </button>
         <button
           type="button"
@@ -119,4 +156,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default Register;

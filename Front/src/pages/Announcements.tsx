@@ -1,27 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-const Announcements = () => {
-  const [announcements, setAnnouncements] = useState([]);
-  const [error, setError] = useState(null);
+// Définir un type pour les annonces
+type Announcement = {
+  _id: string;
+  title: string;
+  description: string;
+  image?: string; // L'image est facultative
+};
+
+const Announcements: React.FC = () => {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]); // Typage des annonces
+  const [error, setError] = useState<string | null>(null); // Typage explicite de l'erreur
 
   // Fetch des annonces depuis le backend
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/annonces');
+        const response = await fetch("http://localhost:5000/api/annonces");
         if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des annonces');
+          throw new Error("Erreur lors de la récupération des annonces");
         }
-        const data = await response.json();
+        const data: Announcement[] = await response.json(); // Typage de la réponse
         setAnnouncements(data);
       } catch (err) {
-        setError(err.message);
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Une erreur inconnue s'est produite.");
+        }
       }
     };
 
     fetchAnnouncements();
   }, []);
+
+  // Suppression d'une annonce
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/annonces/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de l'annonce");
+      }
+
+      // Retirer l'annonce supprimée de la liste
+      setAnnouncements(announcements.filter((ann) => ann._id !== id));
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Une erreur inconnue s'est produite.");
+      }
+    }
+  };
 
   return (
     <div className="announcements-page">
@@ -36,35 +73,24 @@ const Announcements = () => {
               <h3>{announcement.title}</h3>
               <p>{announcement.description}</p>
               {announcement.image && (
-                <img src={`http://localhost:5000/uploads/${announcement.image}`} alt={announcement.title} className="announcement-image" />
+                <img
+                  src={`http://localhost:5000/uploads/${announcement.image}`}
+                  alt={announcement.title}
+                  className="announcement-image"
+                />
               )}
-              <Link to={`/edit/${announcement._id}`} className="edit-link">Modifier</Link>
-              <button onClick={() => handleDelete(announcement._id)}>Supprimer</button>
+              <Link to={`/edit/${announcement._id}`} className="edit-link">
+                Modifier
+              </Link>
+              <button onClick={() => handleDelete(announcement._id)}>
+                Supprimer
+              </button>
             </li>
           ))}
         </ul>
       )}
     </div>
   );
-
-  const handleDelete = async (id) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/annonces/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la suppression de l\'annonce');
-      }
-
-      setAnnouncements(announcements.filter((ann) => ann._id !== id)); // Retirer l'annonce supprimée de l'affichage
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 };
 
 export default Announcements;
