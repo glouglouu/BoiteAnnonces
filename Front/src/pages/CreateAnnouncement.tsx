@@ -23,9 +23,7 @@ const CreateAnnouncement: React.FC = () => {
   const navigate = useNavigate();
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, files } = e.target as HTMLInputElement;
     if (name === "image" && files && files.length > 0) {
@@ -39,18 +37,22 @@ const CreateAnnouncement: React.FC = () => {
     e.preventDefault();
 
     const { title, description, image, category, price, location } = formData;
-    if (!title || !description || !image || !category || !price || !location) {
-      setError("Tous les champs sont requis");
+
+    // Validation locale
+    if (!title || !description || !category || !price || !location || !image) {
+      setError("Tous les champs sont requis.");
       return;
     }
 
     const dataToSend = new FormData();
     dataToSend.append("title", title);
     dataToSend.append("description", description);
-    dataToSend.append("image", image);
     dataToSend.append("category", category);
     dataToSend.append("price", price);
     dataToSend.append("location", location);
+    if (image) {
+      dataToSend.append("image", image);
+    }
 
     try {
       const response = await fetch("http://localhost:5000/api/annonces", {
@@ -59,10 +61,14 @@ const CreateAnnouncement: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Erreur lors de la création de l'annonce");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erreur lors de la création de l'annonce.");
       }
 
       setSuccessMessage("Annonce créée avec succès !");
+      setError(null);
+
+      // Réinitialisation du formulaire
       setFormData({
         title: "",
         description: "",
@@ -71,24 +77,26 @@ const CreateAnnouncement: React.FC = () => {
         price: "",
         location: "",
       });
-      setError(null);
+
+      // Redirection vers la page Home après 3 secondes
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Une erreur inconnue s'est produite.");
+        setError("Une erreur inattendue s'est produite.");
       }
     }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
-        Créer une Annonce
-      </h2>
-      {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Créer une Annonce</h2>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
       {successMessage && (
-        <p className="text-green-500 mb-4 text-center">{successMessage}</p>
+        <p className="text-green-500 mb-4">{successMessage} Redirection en cours...</p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -107,10 +115,7 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label
-            htmlFor="description"
-            className="block text-gray-700 font-medium mb-1"
-          >
+          <label htmlFor="description" className="block text-gray-700 font-medium mb-1">
             Description :
           </label>
           <textarea
@@ -125,10 +130,7 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label
-            htmlFor="category"
-            className="block text-gray-700 font-medium mb-1"
-          >
+          <label htmlFor="category" className="block text-gray-700 font-medium mb-1">
             Catégorie :
           </label>
           <select
@@ -162,10 +164,7 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label
-            htmlFor="location"
-            className="block text-gray-700 font-medium mb-1"
-          >
+          <label htmlFor="location" className="block text-gray-700 font-medium mb-1">
             Localisation :
           </label>
           <input
@@ -187,8 +186,8 @@ const CreateAnnouncement: React.FC = () => {
             type="file"
             id="image"
             name="image"
-            onChange={handleChange}
             accept="image/*"
+            onChange={handleChange}
             className="w-full border rounded-md p-2"
             required
           />
@@ -198,13 +197,6 @@ const CreateAnnouncement: React.FC = () => {
           className="w-full bg-blue-500 text-white font-medium py-2 rounded-md hover:bg-blue-600"
         >
           Créer l'Annonce
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          className="w-full bg-gray-500 text-white font-medium py-2 rounded-md hover:bg-gray-600 mt-2"
-        >
-          Retour à l'accueil
         </button>
       </form>
     </div>

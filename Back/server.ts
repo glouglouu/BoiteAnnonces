@@ -1,0 +1,63 @@
+import express, { Request, Response } from "express";
+import multer from "multer";
+import path from "path";
+import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import annonceRoutes from "./routes/annonceRoutes";
+import userRoutes from "./routes/userRoutes";
+
+dotenv.config();
+
+const app = express();
+
+// Middleware JSON et URL-encodé
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware CORS
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+
+// Configuration de Multer pour les fichiers
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // Répertoire pour sauvegarder les fichiers
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Nom unique pour les fichiers
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limite de taille des fichiers : 5 Mo
+}).single("image");
+
+// Middleware pour servir les fichiers statiques dans le dossier uploads
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Route pour tester l'upload de fichier
+app.post("/api/upload", (req: Request, res: Response) => {
+  upload(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: "Erreur lors du téléchargement du fichier." });
+    }
+    res.status(200).json({ message: "Fichier téléchargé avec succès", file: req.file });
+  });
+});
+
+// Utilisation des routes
+app.use("/api/annonces", annonceRoutes);
+app.use("/api/users", userRoutes);
+
+// Connexion à MongoDB
+mongoose
+  .connect(process.env.DB_URI!, { dbName: "BoiteAnnonces" })
+  .then(() => console.log("Connexion à MongoDB réussie"))
+  .catch((err) => console.error("Erreur de connexion à MongoDB :", err));
+
+// Démarrage du serveur
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Serveur démarré sur le port ${PORT}`);
+});

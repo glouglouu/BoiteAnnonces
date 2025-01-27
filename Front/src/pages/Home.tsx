@@ -1,209 +1,214 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { RiHeart2Fill, RiHeart2Line, RiDeleteBinLine } from "react-icons/ri";
 
 interface Announcement {
-  id: number;
+  _id: string;
   title: string;
   description: string;
   owner: string;
-  category: string;
   date: string;
   isFavorite: boolean;
-  likes: number;
-  dislikes: number;
-}
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  isAdmin: boolean;
 }
 
 const Home: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [selectedAnnouncement, setSelectedAnnouncement] =
-    useState<Announcement | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<string>("date"); // Tri par défaut
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [announcementsPerPage] = useState<number>(5);
+
+  const navigate = useNavigate();
+
+  // Récupérer les annonces depuis le backend
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/annonces");
+      const data = await response.json();
+      setAnnouncements(data);
+    } catch (error) {
+      console.error("Erreur lors du chargement des annonces :", error);
+    }
+  };
 
   useEffect(() => {
-    setUser({
-      id: 1,
-      name: "John Doe",
-      email: "johndoe@example.com",
-      isAdmin: true,
-    });
-
-    // Simuler des annonces
-    setAnnouncements([
-      {
-        id: 1,
-        title: "iPhone 13",
-        description: "Un iPhone 13 en parfait état.",
-        owner: "John Doe",
-        category: "Technologie",
-        date: "2023-01-15",
-        isFavorite: false,
-        likes: 15,
-        dislikes: 2,
-      },
-      {
-        id: 2,
-        title: "Canapé en cuir",
-        description: "Un canapé en cuir de haute qualité.",
-        owner: "Jane Smith",
-        category: "Maison",
-        date: "2023-02-20",
-        isFavorite: true,
-        likes: 20,
-        dislikes: 1,
-      },
-    ]);
+    fetchAnnouncements();
   }, []);
 
-  const toggleFavorite = (id: number) => {
+  // Fonction pour basculer le statut favori
+  const toggleFavorite = async (id: string) => {
     setAnnouncements((prev) =>
       prev.map((announcement) =>
-        announcement.id === id
+        announcement._id === id
           ? { ...announcement, isFavorite: !announcement.isFavorite }
           : announcement
       )
     );
   };
 
-  const viewDetails = (id: number) => {
-    const announcement = announcements.find((a) => a.id === id);
-    setSelectedAnnouncement(announcement || null);
+  // Fonction pour supprimer une annonce
+  const deleteAnnouncement = async (id: string) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/annonces/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Erreur lors de la suppression de l'annonce.");
+      }
+      setAnnouncements((prev) => prev.filter((announcement) => announcement._id !== id));
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'annonce :", error);
+    }
+  };
+
+  // Tri des annonces
+  const sortedAnnouncements = [...announcements].sort((a, b) => {
+    if (sortBy === "title") {
+      return a.title.localeCompare(b.title);
+    }
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+
+  // Filtrage des annonces
+  const filteredAnnouncements = sortedAnnouncements.filter((announcement) => {
+    const matchesSearch = announcement.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesFavorites = !favoritesOnly || announcement.isFavorite;
+
+    return matchesSearch && matchesFavorites;
+  });
+
+  // Pagination
+  const indexOfLastAnnouncement = currentPage * announcementsPerPage;
+  const indexOfFirstAnnouncement = indexOfLastAnnouncement - announcementsPerPage;
+  const currentAnnouncements = filteredAnnouncements.slice(
+    indexOfFirstAnnouncement,
+    indexOfLastAnnouncement
+  );
+
+  const totalPages = Math.ceil(filteredAnnouncements.length / announcementsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
-    <div className={darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}>
-      {/* Header */}
+    <div className="bg-gray-100 min-h-screen">
       <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Boite Annonces</h1>
         <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <span className="font-bold">Bienvenue, {user.name}</span>
-              <button
-                onClick={() => setUser(null)}
-                className="bg-red-500 px-3 py-1 rounded hover:bg-red-700"
-              >
-                Déconnexion
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/login"
-                className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
-              >
-                Connexion
-              </Link>
-              <Link
-                to="/register"
-                className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900"
-              >
-                Inscription
-              </Link>
-            </>
-          )}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="bg-gray-600 px-4 py-2 rounded hover:bg-gray-800"
+          <Link
+            to="/login"
+            className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
           >
-            {darkMode ? "Mode clair" : "Mode sombre"}
-          </button>
+            Connexion
+          </Link>
+          <Link
+            to="/register"
+            className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
+          >
+            Inscription
+          </Link>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto p-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold">Annonces</h2>
-          <Link
-            to="/create"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700"
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-3xl font-bold">Annonces disponibles</h2>
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            onClick={() => navigate("/create")}
           >
             Ajouter une annonce
-          </Link>
+          </button>
         </div>
 
-        {/* Annonce List */}
-        <ul className="mt-6 space-y-4">
-          {announcements.map((announcement) => (
+        {/* Barre de recherche et tri */}
+        <div className="flex space-x-4 mb-4">
+          <input
+            type="text"
+            placeholder="Rechercher une annonce..."
+            className="flex-1 border rounded-md p-2"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={favoritesOnly}
+              onChange={(e) => setFavoritesOnly(e.target.checked)}
+            />
+            <span>Favoris uniquement</span>
+          </label>
+          <select
+            className="border rounded-md p-2"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="date">Trier par date</option>
+            <option value="title">Trier par titre</option>
+          </select>
+        </div>
+
+        {/* Liste des annonces */}
+        <ul className="space-y-4">
+          {currentAnnouncements.map((announcement) => (
             <li
-              key={announcement.id}
-              className="bg-white p-4 rounded shadow flex justify-between items-center"
+              key={announcement._id}
+              className="bg-white p-4 rounded-md shadow flex justify-between items-center"
             >
               <div>
                 <h3 className="text-lg font-bold">{announcement.title}</h3>
-                <p>{announcement.description}</p>
+                <p className="text-gray-700">{announcement.description}</p>
                 <small className="text-gray-500">
                   Publié par {announcement.owner} le {announcement.date}
                 </small>
               </div>
-              <div className="space-x-2">
+              <div className="flex items-center space-x-4">
                 <button
-                  className={`px-3 py-1 rounded ${
-                    announcement.isFavorite ? "bg-yellow-400" : "bg-gray-300"
+                  className={`text-xl ${
+                    announcement.isFavorite ? "text-yellow-400" : "text-gray-400"
                   }`}
-                  onClick={() => toggleFavorite(announcement.id)}
+                  onClick={() => toggleFavorite(announcement._id)}
                 >
-                  {announcement.isFavorite ? "❤️" : "♡"}
+                  {announcement.isFavorite ? <RiHeart2Fill /> : <RiHeart2Line />}
                 </button>
                 <button
-                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700"
-                  onClick={() => viewDetails(announcement.id)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={() => navigate(`/edit/${announcement._id}`)}
                 >
-                  Voir détails
+                  Voir les détails
+                </button>
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  onClick={() => deleteAnnouncement(announcement._id)}
+                >
+                  <RiDeleteBinLine />
                 </button>
               </div>
             </li>
           ))}
         </ul>
 
-        {/* Details Modal */}
-        {selectedAnnouncement && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded shadow-lg w-96">
-              <h3 className="text-xl font-bold mb-4">
-                {selectedAnnouncement.title}
-              </h3>
-              <p className="mb-2">
-                <strong>Description :</strong> {selectedAnnouncement.description}
-              </p>
-              <p className="mb-2">
-                <strong>Propriétaire :</strong> {selectedAnnouncement.owner}
-              </p>
-              <p className="mb-2">
-                <strong>Catégorie :</strong> {selectedAnnouncement.category}
-              </p>
-              <p className="mb-2">
-                <strong>Date :</strong> {selectedAnnouncement.date}
-              </p>
-              <p className="mb-2">
-                <strong>Likes :</strong> {selectedAnnouncement.likes}
-              </p>
-              <p className="mb-2">
-                <strong>Dislikes :</strong> {selectedAnnouncement.dislikes}
-              </p>
-              <button
-                onClick={() => setSelectedAnnouncement(null)}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 w-full"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Pagination */}
+        <div className="flex justify-center mt-6 space-x-2">
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <button
+              key={index}
+              className={`px-3 py-1 rounded ${
+                currentPage === index + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+              onClick={() => handlePageChange(index + 1)}
+            >
+              {index + 1}
+            </button>
+          ))}
+        </div>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white text-center py-4 mt-6">
-        <p>&copy; {new Date().getFullYear()} Boite Annonces. Tous droits réservés.</p>
-      </footer>
     </div>
   );
 };
