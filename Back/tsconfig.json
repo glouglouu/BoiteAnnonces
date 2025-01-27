@@ -14,7 +14,7 @@
       "jsx": "react", // Utilisé uniquement si vous avez des fichiers JSX
       "moduleResolution": "node"
     },
-    "include": ["./**/*.ts"],
+    "include": ["./**/*.ts", "server.ts"],
     "exclude": ["node_modules", "dist"]
   }
   

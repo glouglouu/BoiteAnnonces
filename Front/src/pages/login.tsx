@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { UserContext } from "../Context";
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState<{ email: string; password: string }>(
@@ -11,6 +12,13 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("UserContext not found");
+  }
+
+  const { setUser } = context;
 
   // Gestion des changements dans les champs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +52,13 @@ const Login: React.FC = () => {
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.token); // Sauvegarde du token
+      setUser({
+        token: data.token,
+        firstName: data.user.firstName,
+        lastName: data.user.lastName,
+        email: data.user.email,
+      });
+
       setSuccessMessage("Connexion réussie !");
       setError(null);
 
@@ -72,7 +86,10 @@ const Login: React.FC = () => {
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="email"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Email :
           </label>
           <input
@@ -87,7 +104,10 @@ const Login: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="password" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="password"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Mot de passe :
           </label>
           <input
@@ -108,8 +128,7 @@ const Login: React.FC = () => {
           Se connecter
         </button>
         <button
-          type="button"
-          onClick={() => navigate("/")}
+          type="submit"
           className="w-full bg-gray-500 text-white font-medium py-2 rounded-md hover:bg-gray-600 mt-2"
         >
           Retour à l'accueil

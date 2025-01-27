@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RiHeart2Fill, RiHeart2Line, RiDeleteBinLine } from "react-icons/ri";
-
+import { UserContext } from "../Context";
 interface Announcement {
   _id: string;
   title: string;
@@ -18,8 +18,18 @@ const Home: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>("date"); // Tri par défaut
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [announcementsPerPage] = useState<number>(5);
-
   const navigate = useNavigate();
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("UserContext not found");
+  }
+
+  const { user, setUser } = context;
+
+  useEffect(() => {
+    console.log("user:", { user });
+  }, [user]);
 
   // Récupérer les annonces depuis le backend
   const fetchAnnouncements = async () => {
@@ -56,7 +66,9 @@ const Home: React.FC = () => {
       if (!response.ok) {
         throw new Error("Erreur lors de la suppression de l'annonce.");
       }
-      setAnnouncements((prev) => prev.filter((announcement) => announcement._id !== id));
+      setAnnouncements((prev) =>
+        prev.filter((announcement) => announcement._id !== id)
+      );
     } catch (error) {
       console.error("Erreur lors de la suppression de l'annonce :", error);
     }
@@ -82,13 +94,16 @@ const Home: React.FC = () => {
 
   // Pagination
   const indexOfLastAnnouncement = currentPage * announcementsPerPage;
-  const indexOfFirstAnnouncement = indexOfLastAnnouncement - announcementsPerPage;
+  const indexOfFirstAnnouncement =
+    indexOfLastAnnouncement - announcementsPerPage;
   const currentAnnouncements = filteredAnnouncements.slice(
     indexOfFirstAnnouncement,
     indexOfLastAnnouncement
   );
 
-  const totalPages = Math.ceil(filteredAnnouncements.length / announcementsPerPage);
+  const totalPages = Math.ceil(
+    filteredAnnouncements.length / announcementsPerPage
+  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -99,18 +114,44 @@ const Home: React.FC = () => {
       <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Boite Annonces</h1>
         <div className="flex items-center space-x-4">
-          <Link
-            to="/login"
-            className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
-          >
-            Connexion
-          </Link>
-          <Link
-            to="/register"
-            className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
-          >
-            Inscription
-          </Link>
+          {user.token ? (
+            <>
+              <Link
+                to="/profile"
+                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
+              >
+                {user.firstName}
+              </Link>
+              <button
+                onClick={() =>
+                  setUser({
+                    firstName: null,
+                    lastName: null,
+                    email: null,
+                    token: null,
+                  })
+                }
+                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
+              >
+                Deconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
+              >
+                Connexion
+              </Link>
+              <Link
+                to="/register"
+                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
+              >
+                Inscription
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -119,7 +160,13 @@ const Home: React.FC = () => {
           <h2 className="text-3xl font-bold">Annonces disponibles</h2>
           <button
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            onClick={() => navigate("/create")}
+            onClick={() => {
+              user.token
+                ? navigate("/create")
+                : alert(
+                    "Veuillez vous connecter pour utiliser cette fonctionnalitée"
+                  );
+            }}
           >
             Ajouter une annonce
           </button>
@@ -169,11 +216,17 @@ const Home: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <button
                   className={`text-xl ${
-                    announcement.isFavorite ? "text-yellow-400" : "text-gray-400"
+                    announcement.isFavorite
+                      ? "text-yellow-400"
+                      : "text-gray-400"
                   }`}
                   onClick={() => toggleFavorite(announcement._id)}
                 >
-                  {announcement.isFavorite ? <RiHeart2Fill /> : <RiHeart2Line />}
+                  {announcement.isFavorite ? (
+                    <RiHeart2Fill />
+                  ) : (
+                    <RiHeart2Line />
+                  )}
                 </button>
                 <button
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
