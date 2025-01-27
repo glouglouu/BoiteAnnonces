@@ -1,92 +1,60 @@
-// api.js - Centralise les appels API pour simplifier les requêtes dans le frontend
+const API_URL = "http://localhost:5000/api"; // URL de base de l'API
 
-const API_URL = 'http://localhost:5000/api'; // URL de base de l'API
-
-// Fonction pour envoyer une requête GET
-export const getData = async (endpoint, token = '') => {
+/**
+ * Fonction générique pour effectuer des requêtes API.
+ *
+ * @param {string} endpoint - L'endpoint de l'API.
+ * @param {"GET" | "POST" | "PUT" | "DELETE"} method - La méthode HTTP (GET, POST, PUT, DELETE).
+ * @param {Object} [data] - Les données à envoyer (facultatif).
+ * @param {string} [token] - Le token JWT pour l'authentification (facultatif).
+ * @returns {Promise<any>} - La réponse de l'API sous forme de JSON.
+ */
+const request = async (endpoint, method, data, token) => {
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token ? `Bearer ${token}` : '', // Si le token est fourni, on l'ajoute dans les en-têtes
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de la récupération des données');
+    // Préparation des en-têtes
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
     }
 
-    return await response.json();
-  } catch (error) {
-    throw new Error(error.message || 'Erreur de communication avec le serveur');
-  }
-};
+    // Options de la requête
+    const options = {
+      method,
+      headers,
+    };
 
-// Fonction pour envoyer une requête POST
-export const postData = async (endpoint, data, token = '') => {
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token ? `Bearer ${token}` : '', // Si le token est fourni, on l'ajoute dans les en-têtes
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de l\'envoi des données');
+    // Ajouter les données au corps de la requête si nécessaire
+    if (data) {
+      options.body = JSON.stringify(data);
     }
 
-    return await response.json();
-  } catch (error) {
-    throw new Error(error.message || 'Erreur de communication avec le serveur');
-  }
-};
+    // Effectuer la requête
+    const response = await fetch(`${API_URL}${endpoint}`, options);
 
-// Fonction pour envoyer une requête PUT (mise à jour)
-export const putData = async (endpoint, data, token = '') => {
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token ? `Bearer ${token}` : '', // Si le token est fourni, on l'ajoute dans les en-têtes
-      },
-      body: JSON.stringify(data),
-    });
-
+    // Vérifier le statut de la réponse
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la mise à jour des données');
+      throw new Error(errorData.error || "Une erreur est survenue");
     }
 
+    // Retourner les données JSON
     return await response.json();
   } catch (error) {
-    throw new Error(error.message || 'Erreur de communication avec le serveur');
+    // Gérer les erreurs de communication
+    throw new Error(error.message || "Erreur de communication avec le serveur");
   }
 };
 
-// Fonction pour envoyer une requête DELETE (suppression)
-export const deleteData = async (endpoint, token = '') => {
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token ? `Bearer ${token}` : '', // Si le token est fourni, on l'ajoute dans les en-têtes
-      },
-    });
+// Fonction GET
+export const getData = (endpoint, token) => request(endpoint, "GET", undefined, token);
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Erreur lors de la suppression');
-    }
+// Fonction POST
+export const postData = (endpoint, data, token) => request(endpoint, "POST", data, token);
 
-    return await response.json();
-  } catch (error) {
-    throw new Error(error.message || 'Erreur de communication avec le serveur');
-  }
-};
+// Fonction PUT
+export const putData = (endpoint, data, token) => request(endpoint, "PUT", data, token);
+
+// Fonction DELETE
+export const deleteData = (endpoint, token) => request(endpoint, "DELETE", undefined, token);

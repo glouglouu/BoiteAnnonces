@@ -1,6 +1,5 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./src/**/*.{html,jsx,js,tsx}"],
+  content: ["./src/**/*.{js,jsx,ts,tsx}"], // Indique les fichiers à scanner
   theme: {
     extend: {},
   },

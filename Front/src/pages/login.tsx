@@ -1,75 +1,119 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [error, setError] = useState(null);
+const Login: React.FC = () => {
+  const [formData, setFormData] = useState<{ email: string; password: string }>(
+    {
+      email: "",
+      password: "",
+    }
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  // Gestion des changements dans les champs
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  // Gestion de la soumission du formulaire
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // S'assurer que les données sont envoyées correctement
-    const dataToSend = {
-      email: formData.email,
-      password: formData.password,
-    };
+    const { email, password } = formData;
+
+    if (!email || !password) {
+      setError("Tous les champs sont requis");
+      return;
+    }
 
     try {
-      const response = await fetch('http://localhost:5000/api/users/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/users/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json', // S'assurer que le type de contenu est "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(dataToSend), // Envoyer les données sous forme de JSON
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la connexion');
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de la connexion");
       }
 
       const data = await response.json();
-      localStorage.setItem('token', data.token); // Sauvegarder le token dans localStorage
-      navigate('/'); // Rediriger vers la page principale après la connexion réussie
+      localStorage.setItem("token", data.token); // Sauvegarde du token
+      setSuccessMessage("Connexion réussie !");
+      setError(null);
+
+      // Redirection vers Home après 2 secondes
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
     } catch (err) {
-      setError(err.message); // Afficher l'erreur en cas de problème
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Une erreur inconnue s'est produite.");
+      }
     }
   };
 
   return (
-    <div className="login">
-      <h2>Connexion</h2>
-      {error && <p className="error-message">{error}</p>} {/* Afficher l'erreur */}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Email :</label>
+    <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+      <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+        Connexion
+      </h2>
+      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+      {successMessage && (
+        <p className="text-green-500 text-center mb-4">{successMessage}</p>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
+            Email :
+          </label>
           <input
             type="email"
+            id="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
+            className="w-full border rounded-md p-2"
+            placeholder="Votre adresse email"
             required
           />
         </div>
-        <div className="form-group">
-          <label>Mot de passe :</label>
+        <div>
+          <label htmlFor="password" className="block text-gray-700 font-medium mb-1">
+            Mot de passe :
+          </label>
           <input
             type="password"
+            id="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
+            className="w-full border rounded-md p-2"
+            placeholder="Votre mot de passe"
             required
           />
         </div>
-        <button type="submit">Se connecter</button>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white font-medium py-2 rounded-md hover:bg-blue-600"
+        >
+          Se connecter
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/")}
+          className="w-full bg-gray-500 text-white font-medium py-2 rounded-md hover:bg-gray-600 mt-2"
+        >
+          Retour à l'accueil
+        </button>
       </form>
     </div>
   );
