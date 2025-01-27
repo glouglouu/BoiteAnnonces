@@ -80,7 +80,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ message: "Connexion réussie", token });
+    res.status(200).json({ message: "Connexion réussie", token, user });
   } catch (error) {
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
@@ -108,7 +108,8 @@ export const refreshAccessToken = (req: Request, res: Response): void => {
   jwt.verify(
     refreshToken,
     process.env.JWT_REFRESH_SECRET || "refreshSecret",
-    (err: jwt.VerifyErrors | null, user: any) => { // Ajout des types ici
+    (err: jwt.VerifyErrors | null, user: any) => {
+      // Ajout des types ici
       if (err) {
         res.status(403).json({ error: "Token de rafraîchissement invalide" });
         return;
