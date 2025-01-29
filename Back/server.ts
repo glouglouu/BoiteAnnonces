@@ -5,18 +5,41 @@ import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import annonceRoutes from "./routes/annonceRoutes";
-import userRoutes from "./routes/userRoutes";
+import authRoutes from "./routes/authRoutes";
+import helmet from "helmet";
 
 dotenv.config();
 
 const app = express();
 
+app.use(helmet());
+
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "https://apis.google.com",
+        "https://www.gstatic.com",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "blob:",
+        "data:",
+      ],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:"],
+      objectSrc: ["'none'"], // N'autorise aucun objet
+      frameSrc: ["'self'", "https://accounts.google.com"],
+    },
+  })
+);
 // Middleware JSON et URL-encodé
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Middleware CORS
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: "*", credentials: true }));
 
 // Configuration de Multer pour les fichiers
 const storage = multer.diskStorage({
@@ -40,15 +63,19 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.post("/api/upload", (req: Request, res: Response) => {
   upload(req, res, (err) => {
     if (err) {
-      return res.status(400).json({ error: "Erreur lors du téléchargement du fichier." });
+      return res
+        .status(400)
+        .json({ error: "Erreur lors du téléchargement du fichier." });
     }
-    res.status(200).json({ message: "Fichier téléchargé avec succès", file: req.file });
+    res
+      .status(200)
+      .json({ message: "Fichier téléchargé avec succès", file: req.file });
   });
 });
 
 // Utilisation des routes
 app.use("/api/annonces", annonceRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", authRoutes);
 
 // Connexion à MongoDB
 mongoose

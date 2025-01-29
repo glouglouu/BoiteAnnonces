@@ -1,30 +1,30 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import User from "../models/User"; // Assurez-vous que le modèle User existe et est correctement importé
+import User from "../models/User";
+import { IdTokenClient } from "google-auth-library";
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(
+  "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com"
+);
 
-// Inscription d'un utilisateur
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { firstName, lastName, email, password } = req.body;
 
-    // Vérification des champs requis
     if (!firstName || !lastName || !email || !password) {
       res.status(400).json({ error: "Tous les champs sont requis" });
       return;
     }
 
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       res.status(400).json({ error: "Utilisateur déjà existant" });
       return;
     }
 
-    // Hachage du mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Créer un nouvel utilisateur
     const user = new User({
       firstName,
       lastName,
@@ -32,10 +32,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       password: hashedPassword,
     });
 
-    // Sauvegarder l'utilisateur dans la base de données
     await user.save();
 
-    // Générer un token JWT
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET || "secret",
@@ -48,7 +46,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Connexion d'un utilisateur
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -59,21 +56,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Trouver l'utilisateur par email
     const user = await User.findOne({ email });
     if (!user) {
       res.status(400).json({ error: "Utilisateur non trouvé" });
       return;
     }
 
-    // Vérification du mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       res.status(400).json({ error: "Mot de passe incorrect" });
       return;
     }
 
-    // Générer un token JWT
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET || "secret",
@@ -86,10 +80,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Déconnexion d'un utilisateur
 export const logout = (req: Request, res: Response): void => {
   try {
-    // Supprimer le cookie contenant le token
     res.clearCookie("token");
     res.status(200).json({ message: "Déconnexion réussie" });
   } catch (error) {
@@ -97,7 +89,6 @@ export const logout = (req: Request, res: Response): void => {
   }
 };
 
-// Rafraîchissement du token d'accès
 export const refreshAccessToken = (req: Request, res: Response): void => {
   const refreshToken = req.cookies?.refreshToken;
   if (!refreshToken) {
@@ -109,7 +100,6 @@ export const refreshAccessToken = (req: Request, res: Response): void => {
     refreshToken,
     process.env.JWT_REFRESH_SECRET || "refreshSecret",
     (err: jwt.VerifyErrors | null, user: any) => {
-      // Ajout des types ici
       if (err) {
         res.status(403).json({ error: "Token de rafraîchissement invalide" });
         return;
@@ -123,4 +113,29 @@ export const refreshAccessToken = (req: Request, res: Response): void => {
       res.status(200).json({ accessToken: newAccessToken });
     }
   );
+};
+
+export const googleAuth = (req: Request, res: Response): void => {
+  try {
+    const token = req.headers.authorization;
+    console.log("token", token);
+
+    const ticket = client.verifyIdToken({
+      IdTokenClient: token,
+      audience:
+        "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com",
+    });
+    const payload = ticket.getPayload();
+    console.log("Utilisateur Google :", payload);
+
+    const userToken = jwt.sign(
+      { email: payload.email, name: payload.name, picture: payload.picture },
+      `${process.env.JWT_SECRET}`,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({ message: "Authentification Google", userToken });
+  } catch (error) {
+    res.status(500).json({ error: "Erreur interne du serveur" });
+  }
 };

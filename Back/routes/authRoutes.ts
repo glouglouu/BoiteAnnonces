@@ -5,7 +5,8 @@ import {
   login,
   logout,
   refreshAccessToken,
-} from "../controllers/userController"; // Assurez-vous que le fichier userController.ts exporte correctement ses fonctions
+  googleAuth,
+} from "../controllers/userController";
 
 const router = Router();
 
@@ -20,6 +21,8 @@ router.post("/logout", logout);
 
 // Route pour rafraîchir le token d'accès
 router.post("/refresh", refreshAccessToken);
+
+router.post("/google", googleAuth);
 
 // Authentification Google
 router.get(

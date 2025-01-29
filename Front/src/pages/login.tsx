@@ -1,6 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../Context";
+import GoogleLoginCpnt from "../components/Google_Login";
+import { gapi } from "gapi-script";
+
+const clientId =
+  "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com";
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState<{ email: string; password: string }>(
@@ -19,6 +24,16 @@ const Login: React.FC = () => {
   }
 
   const { setUser } = context;
+
+  useEffect(() => {
+    const initClient = () => {
+      gapi.auth2.init({
+        clientId: clientId,
+        scope: "",
+      });
+    };
+    gapi.load("client:auth2", initClient);
+  }, []);
 
   // Gestion des changements dans les champs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,6 +99,9 @@ const Login: React.FC = () => {
       {successMessage && (
         <p className="text-green-500 text-center mb-4">{successMessage}</p>
       )}
+
+      <GoogleLoginCpnt />
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
@@ -128,7 +146,8 @@ const Login: React.FC = () => {
           Se connecter
         </button>
         <button
-          type="submit"
+          onClick={() => navigate("/")}
+          type="button"
           className="w-full bg-gray-500 text-white font-medium py-2 rounded-md hover:bg-gray-600 mt-2"
         >
           Retour à l'accueil

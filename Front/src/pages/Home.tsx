@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RiHeart2Fill, RiHeart2Line, RiDeleteBinLine } from "react-icons/ri";
 import { UserContext } from "../Context";
+import GoogleLogoutCpnt from "../components/Google_Logout";
 interface Announcement {
   _id: string;
   title: string;
@@ -26,10 +27,6 @@ const Home: React.FC = () => {
   }
 
   const { user, setUser } = context;
-
-  useEffect(() => {
-    console.log("user:", { user });
-  }, [user]);
 
   // Récupérer les annonces depuis le backend
   const fetchAnnouncements = async () => {

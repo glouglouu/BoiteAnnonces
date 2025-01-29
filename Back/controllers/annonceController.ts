@@ -2,14 +2,19 @@ import { Request, Response } from "express";
 import Annonce from "../models/Annonce"; // Assurez-vous que le modèle est correctement configuré
 
 // Créer une annonce
-export const createAnnonce = async (req: Request, res: Response): Promise<void> => {
+export const createAnnonce = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { title, description, category, price, location } = req.body;
     const file = req.file;
 
     // Vérification des champs requis
     if (!title || !description || !category || !price || !location || !file) {
-      res.status(400).json({ error: "Tous les champs sont requis, y compris l'image." });
+      res
+        .status(400)
+        .json({ error: "Tous les champs sont requis, y compris l'image." });
       console.log("Erreur : Tous les champs ne sont pas fournis.");
       return;
     }
@@ -39,19 +44,26 @@ export const createAnnonce = async (req: Request, res: Response): Promise<void> 
 };
 
 // Obtenir toutes les annonces
-export const getAnnonces = async (req: Request, res: Response): Promise<void> => {
+export const getAnnonces = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const annonces = await Annonce.find();
-    console.log("Annonces récupérées :", annonces);
     res.status(200).json(annonces);
   } catch (error) {
     console.error("Erreur lors de la récupération des annonces :", error);
-    res.status(500).json({ error: "Erreur lors de la récupération des annonces" });
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération des annonces" });
   }
 };
 
 // Obtenir les détails d'une annonce
-export const getAnnonceDetails = async (req: Request, res: Response): Promise<void> => {
+export const getAnnonceDetails = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const annonce = await Annonce.findById(id);
@@ -65,13 +77,19 @@ export const getAnnonceDetails = async (req: Request, res: Response): Promise<vo
     console.log("Annonce trouvée :", annonce);
     res.status(200).json(annonce);
   } catch (error) {
-    console.error("Erreur lors de la récupération des détails de l'annonce :", error);
+    console.error(
+      "Erreur lors de la récupération des détails de l'annonce :",
+      error
+    );
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
 };
 
 // Mettre à jour une annonce
-export const updateAnnonce = async (req: Request, res: Response): Promise<void> => {
+export const updateAnnonce = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { title, description, category, price, location } = req.body;
@@ -108,7 +126,10 @@ export const updateAnnonce = async (req: Request, res: Response): Promise<void> 
 };
 
 // Supprimer une annonce
-export const deleteAnnonce = async (req: Request, res: Response): Promise<void> => {
+export const deleteAnnonce = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const annonce = await Annonce.findById(id);
