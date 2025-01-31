@@ -4,15 +4,17 @@ import path from "path";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import passport from "passport"; // Import de Passport
 import annonceRoutes from "./routes/annonceRoutes";
 import authRoutes from "./routes/authRoutes";
-import helmet from "helmet";
 import nodemailer from "nodemailer";
 
 dotenv.config();
 
 const app = express();
 
+// Sécurisation des en-têtes HTTP avec Helmet
 app.use(helmet());
 
 app.use(
@@ -35,6 +37,7 @@ app.use(
     },
   })
 );
+
 // Middleware JSON et URL-encodé
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -73,6 +76,9 @@ app.post("/api/upload", (req: Request, res: Response) => {
       .json({ message: "Fichier téléchargé avec succès", file: req.file });
   });
 });
+
+// Initialisation de Passport
+app.use(passport.initialize());
 
 // Utilisation des routes
 app.use("/api/annonces", annonceRoutes);

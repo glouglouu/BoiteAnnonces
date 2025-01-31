@@ -1,22 +1,25 @@
-import { GoogleLogout } from "react-google-login";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const clientId =
   "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com";
 
 function GoogleLogoutCpnt() {
-  const onLogoutSuccess = () => {
-    console.log("Logout Success ! ");
-  };
+  function onLogoutSuccess() {
+    console.log("Logout Success!");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/"; // Redirection après la déconnexion
+  }
 
   return (
-    <div id="signOutButton">
-      <GoogleLogout
-        clientId={clientId}
-        buttonText="Logout"
-        onLogoutSuccess={onLogoutSuccess}
-        disabledStyle={{ display: "none" }}
-      />
-    </div>
+    <GoogleOAuthProvider clientId={clientId}>
+      <div id="signOutButton">
+        <button onClick={onLogoutSuccess} className="logout-button">
+          Logout
+        </button>
+      </div>
+    </GoogleOAuthProvider>
   );
 }
+
 export default GoogleLogoutCpnt;
