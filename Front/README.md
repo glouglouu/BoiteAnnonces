@@ -220,5 +220,5 @@ GET /api/annonces
 
 ## Crédits
 - **Auteurs :** Kaïs et Mathieu
-- **Contact :** 
+- **Contact :** kais.chelhaoui@next-u.fr , mathieu.buiche@next-u.fr
 
