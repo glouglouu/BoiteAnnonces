@@ -2,11 +2,14 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import User from "../models/User";
-import { IdTokenClient } from "google-auth-library";
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client(
   "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com"
 );
+
+// Ajout des variables d'environnement pour GitHub
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "Iv23ctQcewuO1YVw1wYp";
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || "YOUR_CLIENT_SECRET";
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -50,7 +53,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    // Vérification que l'email et le mot de passe sont envoyés
     if (!email || !password) {
       res.status(400).json({ error: "Email et mot de passe sont requis" });
       return;
@@ -74,17 +76,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       { expiresIn: "1h" }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "Connexion réussie",
-        token,
-        user: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-        },
-      });
+    res.status(200).json({
+      message: "Connexion réussie",
+      token,
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
@@ -125,11 +125,7 @@ export const refreshAccessToken = (req: Request, res: Response): void => {
   );
 };
 
-export const googleAuth = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  // Utilisation de async ici
+export const googleAuth = async (req: Request, res: Response): Promise<void> => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -137,17 +133,13 @@ export const googleAuth = async (
       return;
     }
 
-    // Utilisation de await pour attendre la résolution de la promesse
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience:
         "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com",
     });
 
-    console.log("ticket:", ticket);
-
     const payload = ticket.getPayload();
-    console.log("Utilisateur Google :", payload);
 
     const userToken = jwt.sign(
       { email: payload?.email, name: payload?.name, picture: payload?.picture },
@@ -162,6 +154,56 @@ export const googleAuth = async (
     });
   } catch (error) {
     console.error("Erreur lors de l'authentification Google:", error);
+    res.status(500).json({ error: "Erreur interne du serveur" });
+  }
+};
+
+// **Ajout de la méthode pour GitHub**
+export const githubAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const code = req.query.code as string;
+
+    if (!code) {
+      res.status(400).json({ error: "Code GitHub manquant" });
+      return;
+    }
+
+    // Échanger le code GitHub contre un access token
+    const response = await fetch("https://github.com/login/oauth/access_token", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        code: code,
+      }),
+    });
+
+    const data = await response.json();
+    const accessToken = data.access_token;
+
+    if (!accessToken) {
+      res.status(400).json({ error: "Échec de l'obtention du token GitHub" });
+      return;
+    }
+
+    // Récupérer les infos utilisateur depuis l'API GitHub
+    const userResponse = await fetch("https://api.github.com/user", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const userData = await userResponse.json();
+
+    res.status(200).json({
+      message: "Authentification réussie via GitHub",
+      user: userData,
+    });
+  } catch (error) {
+    console.error("Erreur lors de l'authentification GitHub :", error);
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
 };

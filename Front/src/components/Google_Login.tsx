@@ -8,23 +8,31 @@ const clientId =
 function GoogleLoginCpnt() {
   const context = useContext(UserContext);
   if (!context) throw new Error("UserContext not found");
-  const { user, setUser } = context;
+  const { setUser } = context;
 
   const onSuccess = async (credentialResponse: any) => {
-    const token = credentialResponse.credential;
-    const fetchApiWithToken = await fetch(
-      "http://localhost:5000/api/users/google",
-      {
+    if (!credentialResponse.credential) {
+      console.error("No credential found");
+      return;
+    }
+
+    try {
+      const token = credentialResponse.credential;
+      const response = await fetch("http://localhost:5000/api/users/google", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-      }
-    );
+      });
 
-    await fetchApiWithToken.json().then((res) => {
-      console.log(res);
+      if (!response.ok) {
+        throw new Error("Failed to authenticate with Google");
+      }
+
+      const res = await response.json();
+      console.log("Response from server:", res);
+
       localStorage.setItem("token", res.token);
       localStorage.setItem(
         "user",
@@ -34,12 +42,22 @@ function GoogleLoginCpnt() {
           email: res.user.email,
         })
       );
+      
+      setUser({
+        firstName: res.user.given_name,
+        lastName: res.user.family_name,
+        email: res.user.email,
+        token: res.token,
+      });
+      
       window.location.href = "/";
-    });
+    } catch (error) {
+      console.error("Error during Google authentication:", error);
+    }
   };
 
   const onFailure = () => {
-    console.log("Login Failed!");
+    console.error("Google login failed");
   };
 
   return (

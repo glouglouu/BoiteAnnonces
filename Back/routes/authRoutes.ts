@@ -22,9 +22,10 @@ router.post("/logout", logout);
 // Route pour rafraîchir le token d'accès
 router.post("/refresh", refreshAccessToken);
 
+// Authentification Google (Post-login logique personnalisée dans userController)
 router.post("/google", googleAuth);
 
-// Authentification Google
+// Authentification Google via Passport
 router.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
@@ -40,10 +41,10 @@ router.get(
   }
 );
 
-// Authentification GitHub
+// Authentification GitHub via Passport
 router.get(
   "/auth/github",
-  passport.authenticate("github", { scope: ["user:email"] })
+  passport.authenticate("github", { scope: ["user:email"] }) // Permission pour l'email utilisateur
 );
 router.get(
   "/auth/github/callback",
@@ -51,12 +52,12 @@ router.get(
   (req, res) => {
     res.status(200).json({
       message: "Connexion réussie via GitHub",
-      user: req.user,
+      user: req.user, // Informations de l'utilisateur retournées par GitHub
     });
   }
 );
 
-// Authentification Twitter
+// Authentification Twitter via Passport
 router.get("/auth/twitter", passport.authenticate("twitter"));
 router.get(
   "/auth/twitter/callback",
