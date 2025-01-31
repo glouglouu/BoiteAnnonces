@@ -7,11 +7,28 @@ import {
   refreshAccessToken,
   googleAuth,
 } from "../controllers/userController";
+import EmailVerification from "../models/EmailVerification";
 
 const router = Router();
 
 // Route pour l'inscription
 router.post("/register", register);
+
+router.post("/validate", async (req, res) => {
+  const { code, email } = req.body;
+  const checkCode = await EmailVerification.findOne({ email });
+  if (!checkCode) {
+    res.status(400).json({ error: "Code non trouvé" });
+    return;
+  }
+
+  if (checkCode.code !== parseInt(code)) {
+    res.status(400).json({ error: "Code incorrect" });
+    return;
+  }
+
+  res.status(200).json({ message: "Code correct, compte créé avec succès" });
+});
 
 // Route pour la connexion
 router.post("/login", login);

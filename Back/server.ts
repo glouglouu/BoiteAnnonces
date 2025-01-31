@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import annonceRoutes from "./routes/annonceRoutes";
 import authRoutes from "./routes/authRoutes";
 import helmet from "helmet";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
