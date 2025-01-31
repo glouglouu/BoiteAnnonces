@@ -4,7 +4,7 @@ BoiteAnnonces est une plateforme permettant aux utilisateurs de publier, modifie
 
 ## Fonctionnalités
 - **Création de compte utilisateur** avec validation d'email unique.
-- **Authentification utilisateur** par compte classique ou via OAuth2 (Google, GitHub, Twitter).
+- **Authentification utilisateur** par compte classique ou via OAuth2 (Google, GitHub).
 - **Gestion des annonces** :
   - Création, modification et suppression.
   - Consultation de la liste des annonces et des détails.
@@ -220,5 +220,5 @@ GET /api/annonces
 
 ## Crédits
 - **Auteurs :** Kaïs et Mathieu
-- **Contact :** email@example.com
+- **Contact :** 
 
