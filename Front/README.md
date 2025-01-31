@@ -1,70 +1,224 @@
-# Getting Started with Create React App
+# BoiteAnnonces
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+BoiteAnnonces est une plateforme permettant aux utilisateurs de publier, modifier, consulter et supprimer des annonces. Ce projet inclut une API backend RESTful et une application frontend.
 
-## Available Scripts
+## Fonctionnalités
+- **Création de compte utilisateur** avec validation d'email unique.
+- **Authentification utilisateur** par compte classique ou via OAuth2 (Google, GitHub, Twitter).
+- **Gestion des annonces** :
+  - Création, modification et suppression.
+  - Consultation de la liste des annonces et des détails.
+- **Déconnexion** : le token de session devient inutilisable après déconnexion.
+- **Règles de sécurité** :
+  - Seuls les utilisateurs authentifiés peuvent gérer leurs annonces.
+  - Limitation à 10 requêtes par seconde pour créer des annonces.
+- **Gestion avancée** :
+  - Cache pour optimiser les requêtes à la base de données.
+  - Gestion des modifications concurrentes.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Prérequis
+- **Node.js** (version 16 ou supérieure) [téléchargez ici](https://nodejs.org/)
+- **MongoDB** (Cluster cloud ou local) [inscrivez-vous ici](https://www.mongodb.com/cloud/atlas/register)
+- Un compte GitHub, Google et/ou Twitter pour les tests OAuth2.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Installation
 
-### `npm test`
+### 1. Clonez le projet
+```bash
+git clone <URL_DU_DEPOT_GITHUB>
+cd <nom_du_dossier_cloné>
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 2. Backend : Configuration et installation
 
-### `npm run build`
+#### a. Installez les dépendances
+```bash
+cd Back
+npm install
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### b. Configurez un cluster MongoDB
+1. Rendez-vous sur [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) et créez un compte.
+2. Une fois connecté, cliquez sur **"Build a Database"**.
+3. Sélectionnez **"Shared Cluster"** pour une utilisation gratuite.
+4. Configurez votre cluster (choisissez la région la plus proche).
+5. Une fois le cluster créé, accédez à **"Database Access"** et ajoutez un utilisateur avec un mot de passe.
+6. Accédez à **"Network Access"** et autorisez les connexions depuis n'importe quelle adresse IP (0.0.0.0/0).
+7. Retournez à **"Clusters"**, cliquez sur **"Connect"**, et copiez l'URI de connexion (exemple : `mongodb+srv://<username>:<password>@cluster0.mongodb.net/BoiteAnnonces`).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+#### c. Créez un fichier `.env`
+Dans le dossier `Back`, créez un fichier `.env` avec le contenu suivant :
+```env
+PORT=5000
+DB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/BoiteAnnonces
+JWT_SECRET=VotreCleSecreteJWT
+GITHUB_CLIENT_ID=Iv23ctQcewuO1YVw1wYp
+GITHUB_CLIENT_SECRET=VotreSecretGitHub
+GOOGLE_CLIENT_ID=230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=VotreSecretGoogle
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### d. Démarrez le backend
+```bash
+npm run start
+```
+Le backend sera accessible sur [http://localhost:5000](http://localhost:5000).
 
-### `npm run eject`
+### 3. Frontend : Installation et configuration
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+#### a. Installez les dépendances
+```bash
+cd ../Front
+npm install
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### b. Configurez le fichier `.env`
+Dans le dossier `Front`, créez un fichier `.env` avec le contenu suivant :
+```env
+REACT_APP_BACKEND_URL=http://localhost:5000
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### c. Démarrez le frontend
+```bash
+npm start
+```
+Le frontend sera accessible sur [http://localhost:3000](http://localhost:3000).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## Structure du projet
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Backend
+```
+Back/
+|-- controllers/        # Contrôleurs (logique des routes)
+    |-- annonceController.ts
+    |-- mailSender.ts
+    |-- userController.ts
+|-- middlewares/        # Middleware pour la validation, la sécurité, etc.
+    |-- authMiddleware.tsx
+    |-- errorMiddleware.tsx
+    |-- uploadMiddleware.tsx
+    |-- validationMiddleware.tsx
+|-- models/             # Modèles Mongoose pour MongoDB
+    |-- Annonce.ts
+    |-- EmailVerification.ts
+    |-- User.ts
+|-- routes/             # Routes de l'API REST
+    |-- annonceRoutes.ts
+    |-- authRoutes.ts
+|-- uploads/            # Fichiers uploadés
+|-- .env                # Variables d'environnement
+|-- package.json        # Fichier de configuration npm
+|-- server.ts           # Point d'entrée du serveur
+|-- tsconfig.json       # Configuration TypeScript
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Frontend
+```
+Front/
+|-- public/             # Fichiers statiques
+    |-- favicon.ico
+    |-- index.html
+    |-- logo192.png
+    |-- logo512.png
+    |-- manifest.json
+    |-- robots.txt
+|-- src/
+    |-- components/     # Composants réutilisables
+        |-- Footer.tsx
+        |-- GitHub-login.tsx
+        |-- GitHub-logout.tsx
+        |-- Google_Login.tsx
+        |-- Google_Logout.tsx
+        |-- Header.tsx
+    |-- pages/          # Pages principales de l'application
+        |-- Announcements.tsx
+        |-- CreateAnnouncement.tsx
+        |-- EditAnnouncement.tsx
+        |-- Home.tsx
+        |-- Login.tsx
+        |-- Register.tsx
+    |-- App.tsx         # Composant racine
+    |-- index.tsx       # Point d'entrée de l'application React
+    |-- Context.tsx     # Gestion du contexte global
+    |-- api.js          # Gestion des appels à l'API
+    |-- App.css         # Styles globaux
+    |-- index.css       # Styles de base
+    |-- tailwind.config.js # Configuration Tailwind CSS
+    |-- tsconfig.json   # Configuration TypeScript
+    |-- package.json    # Fichier de configuration npm
+|-- .gitignore          # Fichiers à ignorer par git
+```
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Fonctionnement
 
-### Analyzing the Bundle Size
+### Authentification
+- Les utilisateurs peuvent se connecter via Google, GitHub ou en créant un compte.
+- Un JSON Web Token (JWT) est généré et stocké dans un cookie sécurisé.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Gestion des annonces
+- Les utilisateurs authentifiés peuvent créer, modifier ou supprimer leurs propres annonces.
+- Les annonces contiennent un titre, une description et une image (JPEG/PNG).
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## API : Documentation des endpoints
 
-### Advanced Configuration
+### Utilisateurs
+#### Inscription
+```
+POST /api/users/register
+Body : { firstName, lastName, email, password }
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+#### Connexion
+```
+POST /api/users/login
+Body : { email, password }
+```
 
-### Deployment
+#### Déconnexion
+```
+POST /api/users/logout
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+#### OAuth2 (Google, GitHub, Twitter)
+- **Google** : `/auth/google`
+- **GitHub** : `/auth/github`
+- **Twitter** : `/auth/twitter`
 
-### `npm run build` fails to minify
+### Annonces
+#### Création
+```
+POST /api/annonces
+Headers : { Authorization: Bearer <token> }
+Body : { title, description, image }
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+#### Liste des annonces
+```
+GET /api/annonces
+```
+
+---
+
+## Problèmes courants et solutions
+1. **Erreur de connexion MongoDB** :
+   - Vérifiez l'URI MongoDB dans le fichier `.env`.
+2. **Problème avec OAuth2** :
+   - Assurez-vous que les `client_id` et `client_secret` sont corrects.
+   - Vérifiez les Callback URLs dans Google et GitHub.
+
+---
+
+## Crédits
+- **Auteurs :** Kaïs et Mathieu
+- **Contact :** email@example.com
+
