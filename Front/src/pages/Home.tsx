@@ -124,12 +124,9 @@ const Home: React.FC = () => {
         <div className="flex items-center space-x-4">
           {user.firstName ? (
             <>
-              <Link
-                to="/profile"
-                className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
-              >
+              <button className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200">
                 {user.firstName}
-              </Link>
+              </button>
               <button
                 onClick={() =>
                   setUser({

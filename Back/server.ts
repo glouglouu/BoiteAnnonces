@@ -8,6 +8,7 @@ import helmet from "helmet";
 import passport from "passport"; // Import de Passport
 import annonceRoutes from "./routes/annonceRoutes";
 import authRoutes from "./routes/authRoutes";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 

@@ -2,7 +2,12 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import User from "../models/User";
-const { OAuth2Client } = require("google-auth-library");
+import { IdTokenClient } from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
+import MailSender from "./mailSender";
+import VerificationCode from "../models/EmailVerification";
+import crypto from "crypto";
+
 const client = new OAuth2Client(
   "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com"
 );
@@ -37,13 +42,27 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     await user.save();
 
-    const token = jwt.sign(
-      { id: user._id, email: user.email },
-      process.env.JWT_SECRET || "secret",
-      { expiresIn: "1h" }
-    );
+    const code = crypto.randomInt(100000, 999999);
 
-    res.status(201).json({ message: "Utilisateur créé avec succès", token });
+    const emailToVerify = new VerificationCode({
+      email,
+      code,
+      expiresAt: new Date(Date.now() + 60 * 10),
+    });
+
+    await emailToVerify.save();
+
+    try {
+      MailSender(email, code);
+    } catch (_error) {
+      res.status(500).json({ error: "Erreur lors de l'envoi du mail" });
+    }
+
+    res.status(200).json({
+      message:
+        "Un code de vérification à été envoyé à l'adresse email spécifiée",
+      email: email,
+    });
   } catch (error) {
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
