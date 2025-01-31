@@ -74,7 +74,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ message: "Connexion réussie", token, user });
+    res
+      .status(200)
+      .json({
+        message: "Connexion réussie",
+        token,
+        user: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+        },
+      });
   } catch (error) {
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
@@ -115,27 +125,43 @@ export const refreshAccessToken = (req: Request, res: Response): void => {
   );
 };
 
-export const googleAuth = (req: Request, res: Response): void => {
+export const googleAuth = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  // Utilisation de async ici
   try {
-    const token = req.headers.authorization;
-    console.log("token", token);
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ error: "Token Google invalide" });
+      return;
+    }
 
-    const ticket = client.verifyIdToken({
-      IdTokenClient: token,
+    // Utilisation de await pour attendre la résolution de la promesse
+    const ticket = await client.verifyIdToken({
+      idToken: token,
       audience:
         "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com",
     });
+
+    console.log("ticket:", ticket);
+
     const payload = ticket.getPayload();
     console.log("Utilisateur Google :", payload);
 
     const userToken = jwt.sign(
-      { email: payload.email, name: payload.name, picture: payload.picture },
+      { email: payload?.email, name: payload?.name, picture: payload?.picture },
       `${process.env.JWT_SECRET}`,
       { expiresIn: "1h" }
     );
 
-    res.status(200).json({ message: "Authentification Google", userToken });
+    res.status(200).json({
+      message: "Authentification Google",
+      token: userToken,
+      user: payload,
+    });
   } catch (error) {
+    console.error("Erreur lors de l'authentification Google:", error);
     res.status(500).json({ error: "Erreur interne du serveur" });
   }
 };

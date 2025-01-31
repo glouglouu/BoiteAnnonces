@@ -67,12 +67,8 @@ const Login: React.FC = () => {
       }
 
       const data = await response.json();
-      setUser({
-        token: data.token,
-        firstName: data.user.firstName,
-        lastName: data.user.lastName,
-        email: data.user.email,
-      });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       setSuccessMessage("Connexion réussie !");
       setError(null);
