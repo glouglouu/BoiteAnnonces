@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { RiHeart2Fill, RiHeart2Line, RiDeleteBinLine } from "react-icons/ri";
-import GoogleLogoutCpnt from "../components/Google_Logout";
 interface Announcement {
   _id: string;
   title: string;
   description: string;
-  owner: string;
-  date: string;
+  author: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  createdAt: string;
   isFavorite: boolean;
 }
 
@@ -21,6 +24,8 @@ const Home: React.FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false);
+  const [ownAnnonces, setOwnAnnonces] = useState<boolean>(false);
+
   const [sortBy, setSortBy] = useState<string>("date"); // Tri par défaut
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [announcementsPerPage] = useState<number>(5);
@@ -52,6 +57,7 @@ const Home: React.FC = () => {
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    console.log(storedUser);
   }, []);
 
   // Fonction pour basculer le statut favori
@@ -70,6 +76,9 @@ const Home: React.FC = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/annonces/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
       });
       if (!response.ok) {
         throw new Error("Erreur lors de la suppression de l'annonce.");
@@ -87,7 +96,7 @@ const Home: React.FC = () => {
     if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     }
-    return new Date(b.date).getTime() - new Date(a.date).getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   // Filtrage des annonces
@@ -128,13 +137,15 @@ const Home: React.FC = () => {
                 {user.firstName}
               </button>
               <button
-                onClick={() =>
+                onClick={() => {
                   setUser({
                     firstName: null,
                     lastName: null,
                     email: null,
-                  })
-                }
+                  });
+                  localStorage.removeItem("user");
+                  localStorage.removeItem("token");
+                }}
                 className="bg-white text-blue-600 px-4 py-2 rounded hover:bg-gray-200"
               >
                 Deconnexion
@@ -193,6 +204,14 @@ const Home: React.FC = () => {
             />
             <span>Favoris uniquement</span>
           </label>
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={ownAnnonces}
+              onChange={(e) => setOwnAnnonces(e.target.checked)}
+            />
+            <span>Mes annonces</span>
+          </label>
           <select
             className="border rounded-md p-2"
             value={sortBy}
@@ -205,48 +224,112 @@ const Home: React.FC = () => {
 
         {/* Liste des annonces */}
         <ul className="space-y-4">
-          {currentAnnouncements.map((announcement) => (
-            <li
-              key={announcement._id}
-              className="bg-white p-4 rounded-md shadow flex justify-between items-center"
-            >
-              <div>
-                <h3 className="text-lg font-bold">{announcement.title}</h3>
-                <p className="text-gray-700">{announcement.description}</p>
-                <small className="text-gray-500">
-                  Publié par {announcement.owner} le {announcement.date}
-                </small>
-              </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  className={`text-xl ${
-                    announcement.isFavorite
-                      ? "text-yellow-400"
-                      : "text-gray-400"
-                  }`}
-                  onClick={() => toggleFavorite(announcement._id)}
+          {currentAnnouncements.length === 0 && (
+            <p>Aucune annonce disponible.</p>
+          )}
+          {ownAnnonces ? (
+            <>
+              {currentAnnouncements
+                .filter(
+                  (announcement) => announcement.author.email === user.email
+                )
+                .map((announcement) => (
+                  <li
+                    key={announcement._id}
+                    className="bg-white p-4 rounded-md shadow flex justify-between items-center"
+                  >
+                    <div>
+                      <h3 className="text-lg font-bold">
+                        {announcement.title}
+                      </h3>
+                      <p className="text-gray-700">
+                        {announcement.description}
+                      </p>
+                      <small className="text-gray-500">
+                        Publié par {announcement.author.firstName} le{" "}
+                        {announcement.createdAt}
+                      </small>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <button
+                        className={`text-xl ${
+                          announcement.isFavorite
+                            ? "text-yellow-400"
+                            : "text-gray-400"
+                        }`}
+                        onClick={() => toggleFavorite(announcement._id)}
+                      >
+                        {announcement.isFavorite ? (
+                          <RiHeart2Fill />
+                        ) : (
+                          <RiHeart2Line />
+                        )}
+                      </button>
+                      <button
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                        onClick={() => navigate(`/edit/${announcement._id}`)}
+                      >
+                        Voir les détails
+                      </button>
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        onClick={() => deleteAnnouncement(announcement._id)}
+                      >
+                        <RiDeleteBinLine />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+            </>
+          ) : (
+            <>
+              {currentAnnouncements.map((announcement) => (
+                <li
+                  key={announcement._id}
+                  className="bg-white p-4 rounded-md shadow flex justify-between items-center"
                 >
-                  {announcement.isFavorite ? (
-                    <RiHeart2Fill />
-                  ) : (
-                    <RiHeart2Line />
-                  )}
-                </button>
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                  onClick={() => navigate(`/edit/${announcement._id}`)}
-                >
-                  Voir les détails
-                </button>
-                <button
-                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  onClick={() => deleteAnnouncement(announcement._id)}
-                >
-                  <RiDeleteBinLine />
-                </button>
-              </div>
-            </li>
-          ))}
+                  <div>
+                    <h3 className="text-lg font-bold">{announcement.title}</h3>
+                    <p className="text-gray-700">{announcement.description}</p>
+                    <small className="text-gray-500">
+                      Publié par {announcement.author.firstName} le{" "}
+                      {announcement.createdAt}
+                    </small>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      className={`text-xl ${
+                        announcement.isFavorite
+                          ? "text-yellow-400"
+                          : "text-gray-400"
+                      }`}
+                      onClick={() => toggleFavorite(announcement._id)}
+                    >
+                      {announcement.isFavorite ? (
+                        <RiHeart2Fill />
+                      ) : (
+                        <RiHeart2Line />
+                      )}
+                    </button>
+                    <button
+                      className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                      onClick={() => navigate(`/edit/${announcement._id}`)}
+                    >
+                      Voir les détails
+                    </button>
+                    {user.email === announcement.author.email && (
+                      <button
+                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                        onClick={() => deleteAnnouncement(announcement._id)}
+                      >
+                        <RiDeleteBinLine />
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </>
+          )}
         </ul>
 
         {/* Pagination */}

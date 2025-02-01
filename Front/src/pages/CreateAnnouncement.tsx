@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const CreateAnnouncement: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [formData, setFormData] = useState<{
+    author: string;
     title: string;
     description: string;
     image: File | null;
@@ -10,6 +12,7 @@ const CreateAnnouncement: React.FC = () => {
     price: string;
     location: string;
   }>({
+    author: user.email,
     title: "",
     description: "",
     image: null,
@@ -23,7 +26,9 @@ const CreateAnnouncement: React.FC = () => {
   const navigate = useNavigate();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value, files } = e.target as HTMLInputElement;
     if (name === "image" && files && files.length > 0) {
@@ -31,38 +36,52 @@ const CreateAnnouncement: React.FC = () => {
     } else {
       setFormData({ ...formData, [name]: value });
     }
+    console.log(formData);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { title, description, image, category, price, location } = formData;
+    const { title, description, image, category, price, location, author } =
+      formData;
 
     // Validation locale
-    if (!title || !description || !category || !price || !location || !image) {
+    if (
+      !title ||
+      !description ||
+      !category ||
+      !price ||
+      !location ||
+      !image ||
+      !author
+    ) {
       setError("Tous les champs sont requis.");
       return;
     }
 
-    const dataToSend = new FormData();
-    dataToSend.append("title", title);
-    dataToSend.append("description", description);
-    dataToSend.append("category", category);
-    dataToSend.append("price", price);
-    dataToSend.append("location", location);
-    if (image) {
-      dataToSend.append("image", image);
-    }
+    const data = new FormData();
+    data.append("author", author);
+    data.append("title", title);
+    data.append("description", description);
+    data.append("category", category);
+    data.append("price", price);
+    data.append("location", location);
+    data.append("image", image); // Important: Fichier envoyé via FormData
 
     try {
       const response = await fetch("http://localhost:5000/api/annonces", {
         method: "POST",
-        body: dataToSend,
+        body: data,
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+        },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Erreur lors de la création de l'annonce.");
+        throw new Error(
+          errorData.error || "Erreur lors de la création de l'annonce."
+        );
       }
 
       setSuccessMessage("Annonce créée avec succès !");
@@ -70,6 +89,7 @@ const CreateAnnouncement: React.FC = () => {
 
       // Réinitialisation du formulaire
       setFormData({
+        author: localStorage.getItem(user.email) || "",
         title: "",
         description: "",
         image: null,
@@ -93,14 +113,21 @@ const CreateAnnouncement: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Créer une Annonce</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+        Créer une Annonce
+      </h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {successMessage && (
-        <p className="text-green-500 mb-4">{successMessage} Redirection en cours...</p>
+        <p className="text-green-500 mb-4">
+          {successMessage} Redirection en cours...
+        </p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="title" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="title"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Titre :
           </label>
           <input
@@ -115,7 +142,10 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="description" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="description"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Description :
           </label>
           <textarea
@@ -130,7 +160,10 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="category" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="category"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Catégorie :
           </label>
           <select
@@ -149,7 +182,10 @@ const CreateAnnouncement: React.FC = () => {
           </select>
         </div>
         <div>
-          <label htmlFor="price" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="price"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Prix (€) :
           </label>
           <input
@@ -164,7 +200,10 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="location" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="location"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Localisation :
           </label>
           <input
@@ -179,7 +218,10 @@ const CreateAnnouncement: React.FC = () => {
           />
         </div>
         <div>
-          <label htmlFor="image" className="block text-gray-700 font-medium mb-1">
+          <label
+            htmlFor="image"
+            className="block text-gray-700 font-medium mb-1"
+          >
             Image :
           </label>
           <input

@@ -19,7 +19,11 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (
+  req: Express.Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -42,7 +46,7 @@ router.get("/", getAnnonces);
 router.get("/:id", getAnnonceDetails);
 
 // Route pour mettre à jour une annonce par ID
-router.put("/:id", upload.single("image"), updateAnnonce);
+router.patch("/:id", upload.single("image"), updateAnnonce);
 
 // Route pour supprimer une annonce par ID
 router.delete("/:id", deleteAnnonce);

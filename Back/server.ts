@@ -31,7 +31,7 @@ app.use(
         "data:",
       ],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:"],
+      imgSrc: ["'self'", "data:", "http://localhost:5000"],
       objectSrc: ["'none'"], // N'autorise aucun objet
       frameSrc: ["'self'", "https://accounts.google.com"],
     },
@@ -43,7 +43,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Middleware CORS
-app.use(cors({ origin: "*", credentials: true }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
+  })
+);
 
 // Configuration de Multer pour les fichiers
 const storage = multer.diskStorage({

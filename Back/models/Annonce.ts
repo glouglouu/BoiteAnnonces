@@ -1,7 +1,8 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, type ObjectId } from "mongoose";
 
 // Interface TypeScript pour le modèle d'annonce
 export interface IAnnonce extends Document {
+  author: ObjectId;
   title: string;
   description: string;
   category: string;
@@ -15,6 +16,7 @@ export interface IAnnonce extends Document {
 // Schéma de l'annonce
 const annonceSchema: Schema = new Schema<IAnnonce>(
   {
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     title: { type: String, required: true },
     description: { type: String, required: true },
     category: { type: String, required: true },

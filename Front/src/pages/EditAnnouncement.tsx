@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface Announcement {
+  author: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   title: string;
   description: string;
   image: string | null;
@@ -13,6 +18,11 @@ interface Announcement {
 const EditAnnouncement: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [formData, setFormData] = useState<Announcement>({
+    author: {
+      firstName: "",
+      lastName: "",
+      email: "",
+    },
     title: "",
     description: "",
     image: null,
@@ -25,16 +35,21 @@ const EditAnnouncement: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+
   // Récupération des détails de l'annonce
   useEffect(() => {
     const fetchAnnouncement = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/annonces/${id}`);
+        const response = await fetch(
+          `http://localhost:5000/api/annonces/${id}`
+        );
         if (!response.ok) {
           throw new Error("Annonce introuvable.");
         }
         const data = await response.json();
         setFormData({
+          author: data.author,
           title: data.title,
           description: data.description,
           image: data.image || null,
@@ -55,7 +70,9 @@ const EditAnnouncement: React.FC = () => {
   }, [id]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value, files } = e.target as HTMLInputElement;
     if (name === "image" && files && files.length > 0) {
@@ -70,6 +87,7 @@ const EditAnnouncement: React.FC = () => {
     e.preventDefault();
 
     const updatedData = new FormData();
+    updatedData.append("title", formData.author.email);
     updatedData.append("title", formData.title);
     updatedData.append("description", formData.description);
     updatedData.append("category", formData.category);
@@ -82,7 +100,7 @@ const EditAnnouncement: React.FC = () => {
 
     try {
       const response = await fetch(`http://localhost:5000/api/annonces/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         body: updatedData,
       });
 
@@ -100,14 +118,19 @@ const EditAnnouncement: React.FC = () => {
       }
     }
   };
+  console.log(formData);
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg mt-8">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Détails et modification de l'annonce
+        Détails{" "}
+        {currentUser.email === formData.author?.email && "et modification"} de
+        l'annonce
       </h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
-      {successMessage && <p className="text-green-500 mb-4">{successMessage}</p>}
+      {successMessage && (
+        <p className="text-green-500 mb-4">{successMessage}</p>
+      )}
 
       {/* Section de visualisation des détails */}
       <div className="bg-gray-100 p-4 rounded-lg mb-6 shadow">
@@ -118,126 +141,138 @@ const EditAnnouncement: React.FC = () => {
         <p className="text-gray-600">Localisation : {formData.location}</p>
         {formData.image && (
           <img
-            src={
-              typeof formData.image === "string"
-                ? `http://localhost:5000/${formData.image}`
-                : formData.image
-            }
+            src={require(`${process.env.SERVER_URL}/${formData.image}`)}
             alt="Annonce"
             className="w-full h-auto max-w-md rounded-lg mt-4"
           />
         )}
       </div>
 
-      {/* Formulaire de modification */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="title" className="block text-gray-700 font-medium mb-1">
-            Titre :
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            className="w-full border rounded-md p-2"
-            required
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="description"
-            className="block text-gray-700 font-medium mb-1"
-          >
-            Description :
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full border rounded-md p-2"
-            rows={4}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="category" className="block text-gray-700 font-medium mb-1">
-            Catégorie :
-          </label>
-          <select
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            className="w-full border rounded-md p-2"
-            required
-          >
-            <option value="">Sélectionner une catégorie</option>
-            <option value="tech">Technologie</option>
-            <option value="fashion">Mode</option>
-            <option value="home">Maison</option>
-            <option value="cars">Voitures</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="price" className="block text-gray-700 font-medium mb-1">
-            Prix (€) :
-          </label>
-          <input
-            type="number"
-            id="price"
-            name="price"
-            value={formData.price}
-            onChange={handleChange}
-            className="w-full border rounded-md p-2"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="location" className="block text-gray-700 font-medium mb-1">
-            Localisation :
-          </label>
-          <input
-            type="text"
-            id="location"
-            name="location"
-            value={formData.location}
-            onChange={handleChange}
-            className="w-full border rounded-md p-2"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="image" className="block text-gray-700 font-medium mb-1">
-            Image :
-          </label>
-          <input
-            type="file"
-            id="image"
-            name="image"
-            onChange={handleChange}
-            accept="image/*"
-            className="w-full border rounded-md p-2"
-          />
-        </div>
-        <div className="flex space-x-4">
-          <button
-            type="submit"
-            className="bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600"
-          >
-            Mettre à jour
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="bg-gray-600 text-white font-medium py-2 px-4 rounded-md hover:bg-gray-700"
-          >
-            Retour à l'accueil
-          </button>
-        </div>
-      </form>
+      {currentUser.email === formData.author?.email && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="title"
+              className="block text-gray-700 font-medium mb-1"
+            >
+              Titre :
+            </label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full border rounded-md p-2"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-gray-700 font-medium mb-1"
+            >
+              Description :
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full border rounded-md p-2"
+              rows={4}
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="category"
+              className="block text-gray-700 font-medium mb-1"
+            >
+              Catégorie :
+            </label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className="w-full border rounded-md p-2"
+              required
+            >
+              <option value="">Sélectionner une catégorie</option>
+              <option value="tech">Technologie</option>
+              <option value="fashion">Mode</option>
+              <option value="home">Maison</option>
+              <option value="cars">Voitures</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="price"
+              className="block text-gray-700 font-medium mb-1"
+            >
+              Prix (€) :
+            </label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="w-full border rounded-md p-2"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="location"
+              className="block text-gray-700 font-medium mb-1"
+            >
+              Localisation :
+            </label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              className="w-full border rounded-md p-2"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="image"
+              className="block text-gray-700 font-medium mb-1"
+            >
+              Image :
+            </label>
+            <input
+              type="file"
+              id="image"
+              name="image"
+              onChange={handleChange}
+              accept="image/*"
+              className="w-full border rounded-md p-2"
+            />
+          </div>
+          <div className="flex space-x-4">
+            <button
+              type="submit"
+              className="bg-blue-500 text-white font-medium py-2 px-4 rounded-md hover:bg-blue-600"
+            >
+              Mettre à jour
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="bg-gray-600 text-white font-medium py-2 px-4 rounded-md hover:bg-gray-700"
+            >
+              Retour à l'accueil
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

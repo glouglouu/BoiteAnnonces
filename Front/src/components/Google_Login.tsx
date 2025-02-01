@@ -2,9 +2,6 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useContext } from "react";
 import { UserContext } from "../Context";
 
-const clientId =
-  "230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com";
-
 function GoogleLoginCpnt() {
   const context = useContext(UserContext);
   if (!context) throw new Error("UserContext not found");
@@ -33,7 +30,7 @@ function GoogleLoginCpnt() {
       const res = await response.json();
       console.log("Response from server:", res);
 
-      localStorage.setItem("token", res.token);
+      sessionStorage.setItem("token", res.token);
       localStorage.setItem(
         "user",
         JSON.stringify({
@@ -42,14 +39,14 @@ function GoogleLoginCpnt() {
           email: res.user.email,
         })
       );
-      
+
       setUser({
         firstName: res.user.given_name,
         lastName: res.user.family_name,
         email: res.user.email,
         token: res.token,
       });
-      
+
       window.location.href = "/";
     } catch (error) {
       console.error("Error during Google authentication:", error);
@@ -61,7 +58,7 @@ function GoogleLoginCpnt() {
   };
 
   return (
-    <GoogleOAuthProvider clientId={clientId}>
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID!}>
       <div id="signInButton">
         <GoogleLogin onSuccess={onSuccess} onError={onFailure} />
       </div>
