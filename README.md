@@ -4,7 +4,7 @@ BoiteAnnonces est une plateforme permettant aux utilisateurs de publier, modifie
 
 ## Fonctionnalités
 - **Création de compte utilisateur** avec validation d'email unique.
-- **Authentification utilisateur** par compte classique ou via OAuth2 (Google, GitHub).
+- **Authentification utilisateur** par compte classique ou via OAuth2 (Google, GitHub, Twitter).
 - **Gestion des annonces** :
   - Création, modification et suppression.
   - Consultation de la liste des annonces et des détails.
@@ -21,7 +21,7 @@ BoiteAnnonces est une plateforme permettant aux utilisateurs de publier, modifie
 ## Prérequis
 - **Node.js** (version 16 ou supérieure) [téléchargez ici](https://nodejs.org/)
 - **MongoDB** (Cluster cloud ou local) [inscrivez-vous ici](https://www.mongodb.com/cloud/atlas/register)
-- Un compte GitHub, Google et/ou Twitter pour les tests OAuth2.
+- Un compte GitHub, Google  pour les tests OAuth2.
 
 ---
 
@@ -56,9 +56,9 @@ Dans le dossier `Back`, créez un fichier `.env` avec le contenu suivant :
 PORT=5000
 DB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/BoiteAnnonces
 JWT_SECRET=VotreCleSecreteJWT
-GITHUB_CLIENT_ID=Iv23ctQcewuO1YVw1wYp
+GITHUB_CLIENT_ID=VotreIDGitHub
 GITHUB_CLIENT_SECRET=VotreSecretGitHub
-GOOGLE_CLIENT_ID=230868182843-n3kdq47lln9huckb89injhr5itb4ggg1.apps.googleusercontent.com
+GOOGLE_CLIENT_ID=VotreIDGoogle
 GOOGLE_CLIENT_SECRET=VotreSecretGoogle
 ```
 
@@ -192,7 +192,6 @@ POST /api/users/logout
 #### OAuth2 (Google, GitHub, Twitter)
 - **Google** : `/auth/google`
 - **GitHub** : `/auth/github`
-- **Twitter** : `/auth/twitter`
 
 ### Annonces
 #### Création
@@ -220,5 +219,5 @@ GET /api/annonces
 
 ## Crédits
 - **Auteurs :** Kaïs et Mathieu
-- **Contact :** kais.chelhaoui@next-u.fr , mathieu.buiche@next-u.fr
+- **Contact :** kais.chelhaoui@next-u.fr ,  mathieu.buiche@next-u.fr
 
