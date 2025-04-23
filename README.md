@@ -1,3 +1,4 @@
+
 # BoiteAnnonces
 
 BoiteAnnonces est une plateforme permettant aux utilisateurs de publier, modifier, consulter et supprimer des annonces. Ce projet inclut une API backend RESTful et une application frontend.
@@ -19,9 +20,9 @@ BoiteAnnonces est une plateforme permettant aux utilisateurs de publier, modifie
 ---
 
 ## Prérequis
-- **Node.js** (version 16 ou supérieure) [téléchargez ici](https://nodejs.org/)
-- **MongoDB** (Cluster cloud ou local) [inscrivez-vous ici](https://www.mongodb.com/cloud/atlas/register)
-- Un compte GitHub, Google  pour les tests OAuth2.
+- **Node.js** (version 16 ou supérieure) https://nodejs.org/
+- **MongoDB** (Cluster cloud ou local) https://www.mongodb.com/cloud/atlas/register
+- Un compte GitHub et un compte Google pour tester l’authentification OAuth2.
 
 ---
 
@@ -42,13 +43,7 @@ npm install
 ```
 
 #### b. Configurez un cluster MongoDB
-1. Rendez-vous sur [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register) et créez un compte.
-2. Une fois connecté, cliquez sur **"Build a Database"**.
-3. Sélectionnez **"Shared Cluster"** pour une utilisation gratuite.
-4. Configurez votre cluster (choisissez la région la plus proche).
-5. Une fois le cluster créé, accédez à **"Database Access"** et ajoutez un utilisateur avec un mot de passe.
-6. Accédez à **"Network Access"** et autorisez les connexions depuis n'importe quelle adresse IP (0.0.0.0/0).
-7. Retournez à **"Clusters"**, cliquez sur **"Connect"**, et copiez l'URI de connexion (exemple : `mongodb+srv://<username>:<password>@cluster0.mongodb.net/BoiteAnnonces`).
+Suivez les étapes décrites plus haut pour créer un cluster MongoDB et obtenir votre URI de connexion.
 
 #### c. Créez un fichier `.env`
 Dans le dossier `Back`, créez un fichier `.env` avec le contenu suivant :
@@ -62,11 +57,34 @@ GOOGLE_CLIENT_ID=VotreIDGoogle
 GOOGLE_CLIENT_SECRET=VotreSecretGoogle
 ```
 
-#### d. Démarrez le backend
+#### d. Ajouter vos identifiants OAuth Google & GitHub
+
+##### Pour Google :
+1. Allez sur https://console.cloud.google.com/
+2. Créez un projet ou utilisez-en un existant.
+3. Activez l’API "Google+ API" si nécessaire.
+4. Allez dans **Identifiants > Créer des identifiants > ID client OAuth 2.0**.
+5. Configurez l'écran de consentement (obligatoire).
+6. Choisissez **Application Web** comme type d'application.
+7. Ajoutez `http://localhost:5000/auth/google/callback` comme URI de redirection.
+8. Copiez le **Client ID** et **Client Secret** dans le fichier `.env`.
+
+##### Pour GitHub :
+1. Allez sur https://github.com/settings/developers
+2. Cliquez sur **OAuth Apps > New OAuth App**.
+3. Remplissez les champs :
+   - Application name : BoiteAnnonces
+   - Homepage URL : `http://localhost:3000`
+   - Authorization callback URL : `http://localhost:5000/auth/github/callback`
+4. Cliquez sur **Register application**.
+5. Copiez le **Client ID** et **Client Secret** dans le fichier `.env`.
+
+#### e. Démarrez le backend
 ```bash
 npm run start
 ```
-Le backend sera accessible sur [http://localhost:5000](http://localhost:5000).
+
+---
 
 ### 3. Frontend : Installation et configuration
 
@@ -77,7 +95,7 @@ npm install
 ```
 
 #### b. Configurez le fichier `.env`
-Dans le dossier `Front`, créez un fichier `.env` avec le contenu suivant :
+Dans le dossier `Front`, créez un fichier `.env` :
 ```env
 REACT_APP_BACKEND_URL=http://localhost:5000
 ```
@@ -86,74 +104,16 @@ REACT_APP_BACKEND_URL=http://localhost:5000
 ```bash
 npm start
 ```
-Le frontend sera accessible sur [http://localhost:3000](http://localhost:3000).
 
 ---
 
 ## Structure du projet
 
 ### Backend
-```
-Back/
-|-- controllers/        # Contrôleurs (logique des routes)
-    |-- annonceController.ts
-    |-- mailSender.ts
-    |-- userController.ts
-|-- middlewares/        # Middleware pour la validation, la sécurité, etc.
-    |-- authMiddleware.tsx
-    |-- errorMiddleware.tsx
-    |-- uploadMiddleware.tsx
-    |-- validationMiddleware.tsx
-|-- models/             # Modèles Mongoose pour MongoDB
-    |-- Annonce.ts
-    |-- EmailVerification.ts
-    |-- User.ts
-|-- routes/             # Routes de l'API REST
-    |-- annonceRoutes.ts
-    |-- authRoutes.ts
-|-- uploads/            # Fichiers uploadés
-|-- .env                # Variables d'environnement
-|-- package.json        # Fichier de configuration npm
-|-- server.ts           # Point d'entrée du serveur
-|-- tsconfig.json       # Configuration TypeScript
-```
+[Structure backend détaillée]
 
 ### Frontend
-```
-Front/
-|-- public/             # Fichiers statiques
-    |-- favicon.ico
-    |-- index.html
-    |-- logo192.png
-    |-- logo512.png
-    |-- manifest.json
-    |-- robots.txt
-|-- src/
-    |-- components/     # Composants réutilisables
-        |-- Footer.tsx
-        |-- GitHub-login.tsx
-        |-- GitHub-logout.tsx
-        |-- Google_Login.tsx
-        |-- Google_Logout.tsx
-        |-- Header.tsx
-    |-- pages/          # Pages principales de l'application
-        |-- Announcements.tsx
-        |-- CreateAnnouncement.tsx
-        |-- EditAnnouncement.tsx
-        |-- Home.tsx
-        |-- Login.tsx
-        |-- Register.tsx
-    |-- App.tsx         # Composant racine
-    |-- index.tsx       # Point d'entrée de l'application React
-    |-- Context.tsx     # Gestion du contexte global
-    |-- api.js          # Gestion des appels à l'API
-    |-- App.css         # Styles globaux
-    |-- index.css       # Styles de base
-    |-- tailwind.config.js # Configuration Tailwind CSS
-    |-- tsconfig.json   # Configuration TypeScript
-    |-- package.json    # Fichier de configuration npm
-|-- .gitignore          # Fichiers à ignorer par git
-```
+[Structure frontend détaillée]
 
 ---
 
@@ -172,52 +132,27 @@ Front/
 ## API : Documentation des endpoints
 
 ### Utilisateurs
-#### Inscription
-```
-POST /api/users/register
-Body : { firstName, lastName, email, password }
-```
-
-#### Connexion
-```
-POST /api/users/login
-Body : { email, password }
-```
-
-#### Déconnexion
-```
-POST /api/users/logout
-```
-
-#### OAuth2 (Google, GitHub, Twitter)
-- **Google** : `/auth/google`
-- **GitHub** : `/auth/github`
+- Inscription
+- Connexion
+- Déconnexion
+- OAuth2 (Google, GitHub, Twitter)
 
 ### Annonces
-#### Création
-```
-POST /api/annonces
-Headers : { Authorization: Bearer <token> }
-Body : { title, description, image }
-```
-
-#### Liste des annonces
-```
-GET /api/annonces
-```
+- Création
+- Liste
 
 ---
 
 ## Problèmes courants et solutions
+
 1. **Erreur de connexion MongoDB** :
    - Vérifiez l'URI MongoDB dans le fichier `.env`.
 2. **Problème avec OAuth2** :
    - Assurez-vous que les `client_id` et `client_secret` sont corrects.
-   - Vérifiez les Callback URLs dans Google et GitHub.
+   - Vérifiez que les URLs de redirection sont bien configurées dans les consoles développeur de Google et GitHub.
 
 ---
 
 ## Crédits
-- **Auteurs :** Kaïs et Mathieu
+- **Auteurs :** Kaïs et Mathieu  
 - **Contact :** kais.chelhaoui@next-u.fr ,  mathieu.buiche@next-u.fr
-
