@@ -110,10 +110,64 @@ npm start
 ## Structure du projet
 
 ### Backend
-[Structure backend détaillée]
+Back/
+|-- controllers/        # Contrôleurs (logique des routes)
+    |-- annonceController.ts
+    |-- mailSender.ts
+    |-- userController.ts
+|-- middlewares/        # Middleware pour la validation, la sécurité, etc.
+    |-- authMiddleware.tsx
+    |-- errorMiddleware.tsx
+    |-- uploadMiddleware.tsx
+    |-- validationMiddleware.tsx
+|-- models/             # Modèles Mongoose pour MongoDB
+    |-- Annonce.ts
+    |-- EmailVerification.ts
+    |-- User.ts
+|-- routes/             # Routes de l'API REST
+    |-- annonceRoutes.ts
+    |-- authRoutes.ts
+|-- uploads/            # Fichiers uploadés
+|-- .env                # Variables d'environnement
+|-- package.json        # Fichier de configuration npm
+|-- server.ts           # Point d'entrée du serveur
+|-- tsconfig.json       # Configuration TypeScript
+
 
 ### Frontend
-[Structure frontend détaillée]
+Front/
+|-- public/             # Fichiers statiques
+    |-- favicon.ico
+    |-- index.html
+    |-- logo192.png
+    |-- logo512.png
+    |-- manifest.json
+    |-- robots.txt
+|-- src/
+    |-- components/     # Composants réutilisables
+        |-- Footer.tsx
+        |-- GitHub-login.tsx
+        |-- GitHub-logout.tsx
+        |-- Google_Login.tsx
+        |-- Google_Logout.tsx
+        |-- Header.tsx
+    |-- pages/          # Pages principales de l'application
+        |-- Announcements.tsx
+        |-- CreateAnnouncement.tsx
+        |-- EditAnnouncement.tsx
+        |-- Home.tsx
+        |-- Login.tsx
+        |-- Register.tsx
+    |-- App.tsx         # Composant racine
+    |-- index.tsx       # Point d'entrée de l'application React
+    |-- Context.tsx     # Gestion du contexte global
+    |-- api.js          # Gestion des appels à l'API
+    |-- App.css         # Styles globaux
+    |-- index.css       # Styles de base
+    |-- tailwind.config.js # Configuration Tailwind CSS
+    |-- tsconfig.json   # Configuration TypeScript
+    |-- package.json    # Fichier de configuration npm
+|-- .gitignore          # Fichiers à ignorer par git
 
 ---
 
