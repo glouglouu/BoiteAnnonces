@@ -110,6 +110,7 @@ npm start
 ## Structure du projet
 
 ### Backend
+```
 Back/
 |-- controllers/        # Contrôleurs (logique des routes)
     |-- annonceController.ts
@@ -133,8 +134,10 @@ Back/
 |-- server.ts           # Point d'entrée du serveur
 |-- tsconfig.json       # Configuration TypeScript
 
+```
 
 ### Frontend
+```
 Front/
 |-- public/             # Fichiers statiques
     |-- favicon.ico
@@ -169,6 +172,8 @@ Front/
     |-- package.json    # Fichier de configuration npm
 |-- .gitignore          # Fichiers à ignorer par git
 
+
+```
 ---
 
 ## Fonctionnement
